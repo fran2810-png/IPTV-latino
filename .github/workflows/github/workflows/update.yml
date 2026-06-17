@@ -1,0 +1,41 @@
+name: Actualizar Playlist
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Descargar lista base
+        run: |
+          curl -L "https://iptv-org.github.io/iptv/index.m3u" -o playlist.m3u
+
+      - name: Agregar canales personalizados
+        run: |
+          if [ -f mis_canales.m3u ]; then
+            echo "" >> playlist.m3u
+            tail -n +2 mis_canales.m3u >> playlist.m3u
+          fi
+
+      - name: Publicar cambios
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add playlist.m3u
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Actualización automática de playlist"
+            git push
+          fi
