@@ -1,0 +1,32 @@
+name: Actualizar Playlist
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descargar IPTV
+        run: |
+          curl -L https://iptv-org.github.io/iptv/index.m3u -o playlist.m3u
+
+      - name: Guardar cambios
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+          git add playlist.m3u
+
+          git diff --cached --quiet || git commit -m "Actualización automática"
+
+          git push
