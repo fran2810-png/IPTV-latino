@@ -1,32 +1,36 @@
-name: Actualizar Playlist
+name: Generar Playlist
 
 on:
   workflow_dispatch:
 
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 */6 * * *"
 
 permissions:
   contents: write
 
 jobs:
-  update:
+  generar:
+
     runs-on: ubuntu-latest
 
     steps:
+
       - uses: actions/checkout@v4
 
-      - name: Descargar IPTV
-        run: |
-          curl -L https://iptv-org.github.io/iptv/index.m3u -o playlist.m3u
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Guardar cambios
-        run: |
-          git config --global user.name github-actions
-          git config --global user.email github-actions@github.com
+      - run: pip install requests
+
+      - run: python generar.py
+
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
 
           git add playlist.m3u
 
-          git diff --cached --quiet || git commit -m "Actualización automática"
-
-          git push
+          git diff --cached --quiet || \
+          (git commit -m "Actualización automática" && git push)
